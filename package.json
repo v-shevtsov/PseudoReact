@@ -1,0 +1,14 @@
+{
+  "name": "pseudoreact",
+  "version": "0.0.1",
+  "author": "Vitalii Shevtsov",
+  "description": "My own React implementation with TypeScript",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.3"
+  }
+}
