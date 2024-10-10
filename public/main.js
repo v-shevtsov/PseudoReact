@@ -1,118 +1,129 @@
-const state = {
-    time: new Date(),
-    lots: [{
-        id: 1,
-        name: 'Apple',
-        description: 'A fruit that keeps the doctor away',
-        price: 16,
-    }, {
-        id: 2,
-        name: 'Banana',
-        description: 'A fruit that monkeys love',
-        price: 42,
-    }],
+let state = {
+  time: new Date(),
+  lots: [
+    {
+      id: 1,
+      name: 'Apple',
+      description: 'A fruit that keeps the doctor away',
+      price: 16,
+    },
+    {
+      id: 2,
+      name: 'Banana',
+      description: 'A fruit that monkeys love',
+      price: 42,
+    },
+  ],
 };
 
-function App ({ state }) {
-    const app = document.createElement('div');
-    app.className = 'app';
-    app.append(Header());
-    app.append(Clock({time: state.time}));
-    app.append(Lots({lots: state.lots}));
+function App({ state }) {
+  const app = document.createElement('div');
+  app.className = 'app';
+  app.append(Header());
+  app.append(Clock({ time: state.time }));
+  app.append(Lots({ lots: state.lots }));
 
-    return app;
+  return app;
 }
 
-function Header () {
-    const header = document.createElement('header');
-    header.className = 'header';
-    header.append(Logo());
+function Header() {
+  const header = document.createElement('header');
+  header.className = 'header';
+  header.append(Logo());
 
-    return header;
+  return header;
 }
 
-function Logo () {
-    const logo = document.createElement('img');
-    logo.src = 'logo.jpg';
-    logo.className = 'logo';
+function Logo() {
+  const logo = document.createElement('img');
+  logo.src = 'logo.jpg';
+  logo.className = 'logo';
 
-    return logo;
+  return logo;
 }
 
+function Clock({ time }) {
+  const clock = document.createElement('div');
+  clock.className = 'clock';
 
-function Clock ({ time }) {
-    const clock = document.createElement('div');
-    clock.className = 'clock';
+  const value = document.createElement('span');
+  value.className = 'value';
+  value.innerText = time.toLocaleTimeString();
 
-    const value = document.createElement('span');
-    value.className = 'value';
-    value.innerText = time.toLocaleTimeString();
+  clock.append(value);
 
-    clock.append(value);
+  const icon = document.createElement('span');
 
-    const icon = document.createElement('span');
+  if (time.getHours() >= 7 && time.getHours() <= 21) {
+    icon.className = 'icon day';
+  } else {
+    icon.className = 'icon night';
+  }
 
-    if (time.getHours() >= 7 && time.getHours() <= 21) {
-        icon.className = 'icon day';
-    } else {
-        icon.className = 'icon night';
-    }
+  clock.append(icon);
 
-    clock.append(icon);
-
-    return clock;
+  return clock;
 }
 
-function Lots ({ lots }) {
-    const list = document.createElement('div');
-    list.className = 'lots';
+function Loading() {
+  const node = document.createElement('div');
+  node.className = 'loading';
+  node.innerText = 'Loading...';
 
-    lots.forEach(lot => {
-
-        list.append(Lot({ lot }));
-    });
-
-    return list;
+  return node;
 }
 
-function Lot ({ lot }) {
-    const node = document.createElement('article');
-    node.className = 'lot';
+function Lots({ lots }) {
+  if (!lots) {
+    return Loading();
+  }
 
-    const price = document.createElement('div');
-    price.className = 'price';
-    price.innerText = lot.price;
-    node.append(price);
+  const list = document.createElement('div');
+  list.className = 'lots';
 
-    const name = document.createElement('h1');
-    name.innerText = lot.name;
-    node.append(name);
+  lots.forEach((lot) => {
+    list.append(Lot({ lot }));
+  });
 
-    const description = document.createElement('p');
-    description.innerText = lot.description;
-    node.append(description);
-
-    return node;
+  return list;
 }
 
-function render (newDom, realDomRoot) {
-    realDomRoot.append(newDom);
+function Lot({ lot }) {
+  const node = document.createElement('article');
+  node.className = 'lot';
+
+  const price = document.createElement('div');
+  price.className = 'price';
+  price.innerText = lot.price;
+  node.append(price);
+
+  const name = document.createElement('h1');
+  name.innerText = lot.name;
+  node.append(name);
+
+  const description = document.createElement('p');
+  description.innerText = lot.description;
+  node.append(description);
+
+  return node;
 }
 
-render(
-    App({state}),
-    document.getElementById('root')
-);
+function render(newDom, realDomRoot) {
+  realDomRoot.innerHTML = '';
+  realDomRoot.append(newDom);
+}
 
+function renderView(state) {
+  render(App({ state }), document.getElementById('root'));
+}
+
+renderView(state);
 
 setInterval(() => {
-    const time = new Date();
-    const clock = document.getElementById('root').querySelector('.app>.clock');
-    clock.querySelector('.value').innerText = time.toLocaleTimeString();
+  state = {
+    ...state,
+    time: new Date(),
+  };
 
-    if (time.getHours() >= 7 && time.getHours() <= 21) {
-        clock.querySelector('.icon').className = 'icon day';
-    } else {
-        clock.querySelector('.icon').className = 'icon night';
-    }
+  renderView(state);
 }, 1000);
