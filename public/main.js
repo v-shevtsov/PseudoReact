@@ -43,7 +43,22 @@ function Logo () {
 function Clock ({ time }) {
     const clock = document.createElement('div');
     clock.className = 'clock';
-    clock.innerText = time.toLocaleTimeString();
+
+    const value = document.createElement('span');
+    value.className = 'value';
+    value.innerText = time.toLocaleTimeString();
+
+    clock.append(value);
+
+    const icon = document.createElement('span');
+
+    if (time.getHours() >= 7 && time.getHours() <= 21) {
+        icon.className = 'icon day';
+    } else {
+        icon.className = 'icon night';
+    }
+
+    clock.append(icon);
 
     return clock;
 }
@@ -88,3 +103,16 @@ render(
     App({state}),
     document.getElementById('root')
 );
+
+
+setInterval(() => {
+    const time = new Date();
+    const clock = document.getElementById('root').querySelector('.app>.clock');
+    clock.querySelector('.value').innerText = time.toLocaleTimeString();
+
+    if (time.getHours() >= 7 && time.getHours() <= 21) {
+        clock.querySelector('.icon').className = 'icon day';
+    } else {
+        clock.querySelector('.icon').className = 'icon night';
+    }
+}, 1000);

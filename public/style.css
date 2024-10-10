@@ -27,6 +27,28 @@ body {
     border: 1px solid #ddd;
     border-radius: 6px;
     margin-bottom: 10px;
+
+    .value {
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 15px;
+    }
+
+    .icon {
+        display: inline-block;
+        vertical-align: middle;
+        width: 15px;
+        height: 15px;
+        border-radius: 15px;
+
+        &.day {
+            background-color: #ef7b00;
+        }
+
+        &.night {
+            background-color: #2459a7;
+        }
+    }
 }
 
 .lot {
