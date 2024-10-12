@@ -123,17 +123,6 @@ function Lot({ lot }) {
   return node;
 }
 
-function render(newDom, realDomRoot) {
-  realDomRoot.innerHTML = '';
-  realDomRoot.append(newDom);
-}
-
-function renderView(state) {
-  render(App({ state }), document.getElementById('root'));
-}
-
-renderView(state);
-
 setInterval(() => {
   state = {
     ...state,
@@ -187,3 +176,80 @@ const stream = {
     }
   },
 };
+
+function render(virtualDom, realDomRoot) {
+  const virtualDomRoot = document.createElement(realDomRoot.tagName);
+  virtualDomRoot.id = realDomRoot.id;
+  virtualDomRoot.append(virtualDom);
+
+  sync(virtualDomRoot, realDomRoot);
+}
+
+function sync(virtualNode, realNode) {
+  // Sync element
+
+  if (virtualNode.id !== realNode.id) {
+    realNode.id = virtualNode.id;
+  }
+
+  if (virtualNode.className !== realNode.className) {
+    realNode.className = virtualNode.className;
+  }
+
+  if (virtualNode.attributes) {
+    Array.from(virtualNode.attributes).forEach((attr) => {
+      realNode[attr.name] = attr.value;
+    });
+  }
+
+  if (virtualNode.nodeValue !== realNode.nodeValue) {
+    realNode.nodeValue = virtualNode.nodeValue;
+  }
+
+  // Sync child nodes
+  const virtualChildren = virtualNode.childNodes;
+  const realChildren = realNode.childNodes;
+
+  for (let i = 0; i < virtualChildren.length || i < realChildren.length; i++) {
+    const virtual = virtualChildren[i];
+    const real = realChildren[i];
+
+    // Remove
+    if (!virtual && real) {
+      realNode.remove(real);
+    }
+
+    // Update
+    if (virtual && real && virtual.tagName === real.tagName) {
+      sync(virtual, real);
+    }
+
+    // Replace
+    if (virtual && real && virtual.tagName !== real.tagName) {
+      const newReal = createRealNodeByVirtual(virtual);
+      sync(virtual, newReal);
+      realNode.replaceChild(newReal, real);
+    }
+
+    // Add
+    if (virtual && !real) {
+      const newReal = createRealNodeByVirtual(virtual);
+      sync(virtual, newReal);
+      realNode.appendChild(newReal);
+    }
+  }
+}
+
+function createRealNodeByVirtual(virtual) {
+  if (virtual.nodeType === Node.TEXT_NODE) {
+    return document.createTextNode('');
+  }
+
+  return document.createElement(virtual.tagName);
+}
+
+function renderView(state) {
+  render(App({ state }), document.getElementById('root'));
+}
+
+renderView(state);
