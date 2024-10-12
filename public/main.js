@@ -1,19 +1,34 @@
 let state = {
   time: new Date(),
-  lots: [
-    {
-      id: 1,
-      name: 'Apple',
-      description: 'A fruit that keeps the doctor away',
-      price: 16,
-    },
-    {
-      id: 2,
-      name: 'Banana',
-      description: 'A fruit that monkeys love',
-      price: 42,
-    },
-  ],
+  lots: null,
+};
+
+const api = {
+  get(url) {
+    switch (url) {
+      case '/lots':
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve([
+              {
+                id: 1,
+                name: 'Apple',
+                description: 'A fruit that keeps the doctor away',
+                price: 16,
+              },
+              {
+                id: 2,
+                name: 'Banana',
+                description: 'A fruit that monkeys love',
+                price: 42,
+              },
+            ]);
+          }, 2000);
+        });
+      default:
+        throw new Error(`Unknown url: ${url}`);
+    }
+  },
 };
 
 function App({ state }) {
@@ -127,3 +142,48 @@ setInterval(() => {
 
   renderView(state);
 }, 1000);
+
+api.get('/lots').then((lots) => {
+  state = {
+    ...state,
+    lots,
+  };
+
+  renderView(state);
+
+  const onPrice = (data) => {
+    state = {
+      ...state,
+      lots: state.lots.map((lot) => {
+        if (lot.id === data.id) {
+          return {
+            ...lot,
+            price: data.price,
+          };
+        }
+
+        return lot;
+      }),
+    };
+
+    renderView(state);
+  };
+
+  lots.forEach((lot) => {
+    stream.subscribe(`price-${lot.id}`, onPrice);
+  });
+});
+
+const stream = {
+  subscribe(channel, listener) {
+    const match = /^price-(\d+)/.exec(channel);
+    if (match) {
+      setInterval(() => {
+        listener({
+          id: parseInt(match[1], 10),
+          price: Math.round(Math.random() * 10 + 30),
+        });
+      }, 400);
+    }
+  },
+};
