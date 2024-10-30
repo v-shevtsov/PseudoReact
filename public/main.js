@@ -31,139 +31,82 @@ const api = {
   },
 };
 
+const VDom = {
+  createElement(type, props = {}, ...children) {
+    const key = props.key ?? null;
+
+    if (children.length === 1) {
+      props.children = children[0];
+    } else {
+      props.children = children;
+    }
+
+    return {
+      type,
+      key,
+      props,
+    };
+  },
+};
+
+// ##########################
+
 function App({ state }) {
-  return {
-    type: 'div',
-    props: {
-      className: 'app',
-      children: [
-        { type: Header, props: {} },
-        { type: Clock, props: { time: state.time } },
-        { type: Lots, props: { lots: state.lots } },
-      ],
-    },
-  };
+  return VDom.createElement(
+    'div',
+    { className: 'app' },
+    VDom.createElement(Header),
+    VDom.createElement(Clock, { time: state.time }),
+    VDom.createElement(Lots, { lots: state.lots })
+  );
 }
 
 function Header() {
-  return {
-    type: 'header',
-    props: {
-      className: 'header',
-      children: {
-        type: Logo,
-      },
-    },
-  };
-}
-
-function Block(props) {
-  return {
-    type: 'div',
-    props: {
-      className: 'block',
-      children: props.children,
-    },
-  };
+  return VDom.createElement('header', { className: 'header' }, VDom.createElement(Logo));
 }
 
 function Logo() {
-  return {
-    type: 'img',
-    props: {
-      className: 'logo',
-      src: 'logo.jpg',
-    },
-  };
+  return VDom.createElement('img', { className: 'logo', src: 'logo.jpg' });
 }
 
 function Clock({ time }) {
   const isDay = time.getHours() >= 7 && time.getHours() <= 21;
 
-  return {
-    type: 'div',
-    props: {
-      className: 'clock',
-      children: [
-        {
-          type: 'span',
-          props: {
-            className: 'value',
-            children: time.toLocaleTimeString(),
-          },
-        },
-        {
-          type: 'span',
-          props: {
-            className: isDay ? 'icon day' : 'icon night',
-          },
-        },
-      ],
-    },
-  };
+  return VDom.createElement(
+    'div',
+    { className: 'clock' },
+    VDom.createElement('span', { className: 'value' }, time.toLocaleTimeString()),
+    VDom.createElement('span', { className: isDay ? 'icon day' : 'icon night' })
+  );
 }
 
 function Loading() {
-  return {
-    type: 'div',
-    props: {
-      className: 'loading',
-      children: 'Loading...',
-    },
-  };
+  return VDom.createElement('div', { className: 'loading' }, 'Loading...');
 }
 
 function Lots({ lots }) {
   if (!lots) {
-    return {
-      type: Loading,
-      props: {},
-    };
+    return VDom.createElement(Loading);
   }
 
-  return {
-    type: 'div',
-    props: {
-      className: 'lots',
-      children: lots.map((lot) => ({
-        type: Lot,
-        props: { lot },
-      })),
-    },
-  };
+  return VDom.createElement(
+    'div',
+    { className: 'lots' },
+    lots.map((lot) => VDom.createElement(Lot, { lot, key: lot.id }))
+  );
 }
 
-function Lot({ lot }) {
-  return {
-    type: 'article',
-    key: lot.id,
-    props: {
-      className: 'lot',
-      children: [
-        {
-          type: 'div',
-          props: {
-            className: 'price',
-            children: lot.price,
-          },
-        },
-        {
-          type: 'h1',
-          props: {
-            className: 'name',
-            children: lot.name,
-          },
-        },
-        {
-          type: 'p',
-          props: {
-            children: lot.description,
-          },
-        },
-      ],
-    },
-  };
+function Lot({ lot, key }) {
+  return VDom.createElement(
+    'article',
+    { className: 'lot', key },
+    VDom.createElement('div', { className: 'price' }, lot.price),
+    VDom.createElement('h1', {}, lot.name),
+    VDom.createElement('p', {}, lot.description)
+  );
 }
+
+// ##########################
 
 setInterval(() => {
   state = {
@@ -319,7 +262,7 @@ function createRealNodeByVirtual(virtual) {
 }
 
 function renderView(state) {
-  render(App({ state }), document.getElementById('root'));
+  render(VDom.createElement(App, { state }), document.getElementById('root'));
 }
 
 renderView(state);
