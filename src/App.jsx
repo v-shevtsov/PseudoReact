@@ -44,12 +44,79 @@ const stream = {
 
 // ##########################
 
+const SET_TIME = 'setTime';
+const SET_LOTS = 'setLots';
+const CHANGE_LOT_PRICE = 'changeLotPrice';
+
+const appReducer = (state, action) => {
+  switch (action.type) {
+    case SET_TIME:
+      return {
+        ...state,
+        time: action.time,
+      };
+    case SET_LOTS:
+      return {
+        ...state,
+        lots: action.lots,
+      };
+    case CHANGE_LOT_PRICE:
+      return {
+        ...state,
+        lots: state.lots.map((lot) => {
+          if (lot.id === action.id) {
+            return {
+              ...lot,
+              price: action.price,
+            };
+          }
+
+          return lot;
+        }),
+      };
+    default:
+      return state;
+  }
+};
+
+// ##########################
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-let state = {
+const initialState = {
   time: new Date(),
   lots: null,
 };
+
+class Store {
+  constructor(reducer, initialState) {
+    this.reducer = reducer;
+    this.state = initialState;
+    this.listeners = [];
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  setState(state) {
+    this.state = typeof state === 'function' ? state(this.state) : state;
+
+    this.listeners.forEach((listener) => listener());
+  }
+
+  dispatch(action) {
+    this.setState((state) => this.reducer(state, action));
+  }
+
+  subscribe(listener) {
+    this.listeners.push(listener);
+
+    return () => (this.listeners = this.listeners.filter((l) => l !== listener));
+  }
+}
+
+const store = new Store(appReducer, initialState);
 
 // ##########################
 
@@ -116,42 +183,16 @@ function Lot({ lot }) {
 // ##########################
 
 setInterval(() => {
-  state = {
-    ...state,
-    time: new Date(),
-  };
-
-  renderView(state);
+  store.dispatch({ type: SET_TIME, time: new Date() });
 }, 1000);
 
 api.get('/lots').then((lots) => {
-  state = {
-    ...state,
-    lots,
-  };
-
-  renderView(state);
-
-  const onPrice = (data) => {
-    state = {
-      ...state,
-      lots: state.lots.map((lot) => {
-        if (lot.id === data.id) {
-          return {
-            ...lot,
-            price: data.price,
-          };
-        }
-
-        return lot;
-      }),
-    };
-
-    renderView(state);
-  };
+  store.dispatch({ type: SET_LOTS, lots });
 
   lots.forEach((lot) => {
-    stream.subscribe(`price-${lot.id}`, onPrice);
+    stream.subscribe(`price-${lot.id}`, (data) => {
+      store.dispatch({ type: CHANGE_LOT_PRICE, id: data.id, price: data.price });
+    });
   });
 });
 
@@ -161,4 +202,8 @@ function renderView(state) {
   root.render(React.createElement(App, { state }));
 }
 
-renderView(state);
+const unsubscribe = store.subscribe(() => {
+  renderView(store.getState());
+});
+
+renderView(store.getState());
