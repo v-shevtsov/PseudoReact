@@ -48,22 +48,35 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 // ##########################
 
+// Actions
 const SET_TIME = 'setTime';
 const SET_LOTS = 'setLots';
 const CHANGE_LOT_PRICE = 'changeLotPrice';
 
-const initialState = {
+// Initial state
+const clockInitialState = {
   time: new Date(),
+};
+
+const auctionInitialState = {
   lots: null,
 };
 
-const appReducer = (state = initialState, action) => {
+// Reducers
+const clockReducer = (state = clockInitialState, action) => {
   switch (action.type) {
     case SET_TIME:
       return {
         ...state,
         time: action.time,
       };
+    default:
+      return state;
+  }
+};
+
+const auctionReducer = (state = auctionInitialState, action) => {
+  switch (action.type) {
     case SET_LOTS:
       return {
         ...state,
@@ -87,6 +100,11 @@ const appReducer = (state = initialState, action) => {
       return state;
   }
 };
+
+// Actions creators
+const setTime = (time) => ({ type: SET_TIME, time });
+const setLots = (lots) => ({ type: SET_LOTS, lots });
+const changeLotPrice = (id, price) => ({ type: CHANGE_LOT_PRICE, id, price });
 
 class Store {
   constructor(reducer, initialState) {
@@ -116,7 +134,16 @@ class Store {
   }
 }
 
-const store = new Store(appReducer);
+const combineReducers =
+  (reducers) =>
+  (state = {}, action) => {
+    return Object.entries(reducers).reduce((acc, [key, reducer]) => {
+      acc[key] = reducer(state[key], action);
+      return acc;
+    }, {});
+  };
+
+const store = new Store(combineReducers({ clock: clockReducer, auction: auctionReducer }));
 
 // ##########################
 
@@ -124,8 +151,8 @@ function App({ state }) {
   return (
     <div className="app">
       <Header />
-      <Clock time={state.time} />
-      <Lots lots={state.lots} />
+      <Clock time={state.clock.time} />
+      <Lots lots={state.auction.lots} />
     </div>
   );
 }
@@ -183,15 +210,15 @@ function Lot({ lot }) {
 // ##########################
 
 setInterval(() => {
-  store.dispatch({ type: SET_TIME, time: new Date() });
+  store.dispatch(setTime(new Date()));
 }, 1000);
 
 api.get('/lots').then((lots) => {
-  store.dispatch({ type: SET_LOTS, lots });
+  store.dispatch(setLots(lots));
 
   lots.forEach((lot) => {
     stream.subscribe(`price-${lot.id}`, (data) => {
-      store.dispatch({ type: CHANGE_LOT_PRICE, id: data.id, price: data.price });
+      store.dispatch(changeLotPrice(data.id, data.price));
     });
   });
 });
