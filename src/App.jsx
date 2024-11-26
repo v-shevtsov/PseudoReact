@@ -44,11 +44,20 @@ const stream = {
 
 // ##########################
 
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// ##########################
+
 const SET_TIME = 'setTime';
 const SET_LOTS = 'setLots';
 const CHANGE_LOT_PRICE = 'changeLotPrice';
 
-const appReducer = (state, action) => {
+const initialState = {
+  time: new Date(),
+  lots: null,
+};
+
+const appReducer = (state = initialState, action) => {
   switch (action.type) {
     case SET_TIME:
       return {
@@ -79,19 +88,10 @@ const appReducer = (state, action) => {
   }
 };
 
-// ##########################
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-const initialState = {
-  time: new Date(),
-  lots: null,
-};
-
 class Store {
   constructor(reducer, initialState) {
     this.reducer = reducer;
-    this.state = initialState;
+    this.state = reducer(initialState, { type: null });
     this.listeners = [];
   }
 
@@ -116,7 +116,7 @@ class Store {
   }
 }
 
-const store = new Store(appReducer, initialState);
+const store = new Store(appReducer);
 
 // ##########################
 
